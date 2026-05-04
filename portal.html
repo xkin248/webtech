@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | EduStream</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">EduStream.</a>
+        <ul class="nav-links">
+            <li><button onclick="toggleDarkMode()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;" id="theme-icon">🌙</button></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="bookstore.html">Bookstore</a></li>
+            <li class="auth-required" style="display: none;"><a href="#" id="dynamic-dash-link">Dashboard</a></li>
+            <li class="auth-required" style="display: none;"><a href="forum.html">Community</a></li>
+            <li><a href="portal.html" id="nav-auth-btn" class="btn btn-primary">Sign In</a></li>
+        </ul>
+    </nav>
+    <main>
+        <header class="hero"><h1 style="font-size: 3rem; font-weight: 900;">System <span style="color:var(--primary)">Login</span></h1></header>
+        <section class="container" style="max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;">
+            <div class="card animate-fade-in">
+                <h2 style="margin-bottom: 2rem;">Sign In</h2>
+                <form id="loginForm">
+                    <div style="margin-bottom: 1.5rem;"><label>Role</label><select id="roleSelect"><option value="student">Student</option><option value="lecturer">Lecturer</option><option value="admin">Administrator</option></select></div>
+                    <div style="margin-bottom: 1.5rem;"><label>User ID</label><input type="text" id="loginId" required></div>
+                    <div style="margin-bottom: 1.5rem;"><label>Password</label><input type="password" id="password" required></div>
+                    <div style="background: rgba(79,70,229,0.05); padding: 1rem; border-radius: 12px; font-size: 0.85rem; color: var(--text-light); margin-bottom: 1.5rem; border: 1px dashed var(--primary);"><strong>Demo Accounts (pass123):</strong><br>Student: bcs24020033 <br>Lecturer: lec01 <br>Admin: admin01</div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Authenticate</button>
+                </form>
+            </div>
+            <div class="animate-fade-in delay-1" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔐</div><h3>Secure Gateway</h3><p style="color: var(--text-light);">Select your role to access your dedicated workspace.</p>
+            </div>
+        </section>
+    </main>
+    <footer style="background: #0f172a; color: #94a3b8; padding: 4rem 10% 2rem; margin-top: auto;"><div style="max-width: 1200px; margin: 0 auto; text-align: center;"><a href="index.html" class="logo" style="color: white; -webkit-text-fill-color: white;">EduStream.</a></div></footer>
+    <script src="app.js"></script>
+</body>
+</html>

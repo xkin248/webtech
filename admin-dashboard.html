@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | EduStream</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">EduStream.</a>
+        <ul class="nav-links">
+            <li><button onclick="toggleDarkMode()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;" id="theme-icon">🌙</button></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="bookstore.html">Bookstore</a></li>
+            <li class="auth-required" style="display: none;"><a href="#" id="dynamic-dash-link" style="color: var(--primary);">Dashboard</a></li>
+            <li class="auth-required" style="display: none;"><a href="forum.html">Community</a></li>
+            <li><a href="portal.html" id="nav-auth-btn" class="btn btn-primary">Sign In</a></li>
+        </ul>
+    </nav>
+    <main class="container" style="max-width: 1100px; margin-top: 2rem;">
+        <div class="card animate-fade-in" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div><p style="color: var(--text-light); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">System Administrator,</p><h2 style="font-size: 2.2rem; font-weight:900; color: var(--primary);" id="user-greeting">Admin</h2></div>
+                <div class="badge badge-danger">ADMINISTRATOR</div>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div class="card animate-fade-in delay-1" style="background: #0f172a; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #1e293b; padding-bottom: 1rem;"><h3 style="color: #fff;">Server Logs</h3><span class="badge badge-success" style="background: #166534; color: #fff;">LIVE</span></div><div id="logs-feed" style="height: 250px; overflow-y: auto;"></div>
+            </div>
+            <div class="card animate-fade-in delay-2"><h3 style="margin-bottom: 1.5rem;">Manage Users</h3><div id="users-feed"></div></div>
+        </div>
+    </main>
+    <footer style="background: #0f172a; color: #94a3b8; padding: 4rem 10% 2rem; margin-top: auto;"><div style="max-width: 1200px; margin: 0 auto; text-align: center;"><a href="index.html" class="logo" style="color: white; -webkit-text-fill-color: white;">EduStream.</a></div></footer>
+    <script src="app.js"></script>
+</body>
+</html>

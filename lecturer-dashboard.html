@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Dashboard | EduStream</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">EduStream.</a>
+        <ul class="nav-links">
+            <li><button onclick="toggleDarkMode()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;" id="theme-icon">🌙</button></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="bookstore.html">Bookstore</a></li>
+            <li class="auth-required" style="display: none;"><a href="#" id="dynamic-dash-link" style="color: var(--primary);">Dashboard</a></li>
+            <li class="auth-required" style="display: none;"><a href="forum.html">Community</a></li>
+            <li><a href="portal.html" id="nav-auth-btn" class="btn btn-primary">Sign In</a></li>
+        </ul>
+    </nav>
+    <main class="container" style="max-width: 1000px; margin-top: 2rem; display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+        <div class="card animate-fade-in">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border);">
+                <div><p style="color: var(--text-light); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Welcome Back,</p><h2 style="font-size: 2.2rem; font-weight:900; color: var(--primary);" id="user-greeting">Lecturer</h2></div>
+                <div class="badge badge-secondary">LECTURER</div>
+            </div>
+            <h3 style="margin-bottom: 1.5rem;">Pending Assignments</h3><div id="assignments-feed"></div>
+        </div>
+        <div class="card animate-fade-in delay-1" style="background: var(--bg-light); border: 2px dashed var(--glass-border);">
+            <h3 style="margin-bottom: 1.5rem;">Announcements</h3><button class="btn btn-primary" style="width: 100%; margin-bottom: 1.5rem;" onclick="openAnnouncementModal()">+ New</button><div id="announcements-feed"></div>
+        </div>
+    </main>
+    <div id="announcement-modal" class="modal-overlay"><div class="card" style="width: 90%; max-width: 500px;"><h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Post to Students</h3><textarea id="announcement-text" placeholder="Type your announcement..." rows="4" style="margin-bottom: 1.5rem; resize:vertical;"></textarea><div style="display: flex; justify-content: flex-end; gap: 1rem;"><button class="btn btn-outline" onclick="closeAnnouncementModal()">Cancel</button><button class="btn btn-primary" onclick="submitAnnouncement()">Post</button></div></div></div>
+    <footer style="background: #0f172a; color: #94a3b8; padding: 4rem 10% 2rem; margin-top: auto;"><div style="max-width: 1200px; margin: 0 auto; text-align: center;"><a href="index.html" class="logo" style="color: white; -webkit-text-fill-color: white;">EduStream.</a></div></footer>
+    <script src="app.js"></script>
+</body>
+</html>

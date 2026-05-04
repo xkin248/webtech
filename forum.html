@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum | EduStream</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">EduStream.</a>
+        <ul class="nav-links">
+            <li><button onclick="toggleDarkMode()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;" id="theme-icon">🌙</button></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="bookstore.html">Bookstore</a></li>
+            <li class="auth-required" style="display: none;"><a href="#" id="dynamic-dash-link">Dashboard</a></li>
+            <li class="auth-required" style="display: none;"><a href="forum.html" style="color: var(--primary);">Community</a></li>
+            <li><a href="portal.html" id="nav-auth-btn" class="btn btn-primary">Sign In</a></li>
+        </ul>
+    </nav>
+    <main class="container" style="max-width: 900px;">
+        <div class="animate-fade-in" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+            <h1 style="font-size: 3rem; font-weight: 900;">Peer <span style="color:var(--primary)">Community</span></h1>
+            <button class="btn btn-primary" onclick="openTopicModal()">+ Create Topic</button>
+        </div>
+        <div id="forum-posts-container" class="animate-fade-in delay-1">
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;"><h3 style="margin: 0; font-size: 1.4rem;">Need help setting up MySQL with PHP</h3><button class="btn btn-danger" onclick="deletePost(this)">Delete</button></div>
+            </div>
+        </div>
+    </main>
+    <div id="topic-modal" class="modal-overlay"><div class="card" style="width: 90%; max-width: 600px;"><h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Create New Topic</h3><input type="text" id="topic-title" placeholder="Topic Title" style="margin-bottom: 1rem;"><textarea id="topic-body" placeholder="Describe your question..." rows="5" style="margin-bottom: 1rem; resize:vertical;"></textarea><div style="display: flex; justify-content: flex-end; gap: 1rem;"><button class="btn btn-outline" onclick="closeTopicModal()">Cancel</button><button class="btn btn-primary" onclick="submitTopic()">Post</button></div></div></div>
+    <footer style="background: #0f172a; color: #94a3b8; padding: 4rem 10% 2rem; margin-top: auto;"><div style="max-width: 1200px; margin: 0 auto; text-align: center;"><a href="index.html" class="logo" style="color: white; -webkit-text-fill-color: white;">EduStream.</a></div></footer>
+    <script src="app.js"></script>
+</body>
+</html>

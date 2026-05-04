@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | EduStream</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .kanban-column { background: var(--card-bg); padding: 1.5rem; border-radius: 16px; border: 2px dashed var(--glass-border); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .draggable-task { cursor: grab; background: var(--bg-light); border: 1px solid var(--glass-border); padding: 1.2rem; margin-bottom: 1rem; border-radius: 12px; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .draggable-task:active { cursor: grabbing; transform: scale(0.98); }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">EduStream.</a>
+        <ul class="nav-links">
+            <li><button onclick="toggleDarkMode()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;" id="theme-icon">🌙</button></li>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="bookstore.html">Bookstore</a></li>
+            <li class="auth-required" style="display: none;"><a href="#" id="dynamic-dash-link" style="color: var(--primary);">Dashboard</a></li>
+            <li class="auth-required" style="display: none;"><a href="forum.html">Community</a></li>
+            <li><a href="portal.html" id="nav-auth-btn" class="btn btn-primary">Sign In</a></li>
+        </ul>
+    </nav>
+    <main class="container" style="max-width: 1200px; margin-top: 2rem;">
+        <div class="card animate-fade-in" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; gap: 1.5rem; align-items: center;">
+                    <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Avatar" class="avatar" style="width: 70px; height: 70px;">
+                    <div>
+                        <p style="color: var(--text-light); font-size: 0.9rem; font-weight: 600; text-transform: uppercase;">Welcome Back,</p>
+                        <h2 style="font-size: 2.2rem; font-weight:900; color: var(--primary);" id="user-greeting">Student</h2>
+                        <div style="margin-top: 0.5rem; width: 100%; min-width: 250px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; color: var(--text-light); margin-bottom: 0.2rem;">
+                                <span>Level 1 Scholar</span><span id="xp-text">0 / 100 XP</span>
+                            </div>
+                            <div style="background: var(--glass-border); height: 8px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0,0,0,0.05);">
+                                <div id="xp-bar-fill" style="background: linear-gradient(90deg, var(--secondary), var(--primary)); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="badge badge-primary">STUDENT</div>
+            </div>
+        </div>
+        
+        <div class="animate-fade-in delay-1">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;"><h3 style="margin: 0; font-size: 1.5rem;">Interactive Study Planner</h3><span class="badge badge-secondary">Drag and Drop</span></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; min-height: 400px;">
+                <div class="kanban-column"><h4 style="margin-bottom: 1.5rem; display: flex; justify-content: space-between;">To Do <span class="badge badge-primary">3</span></h4><div class="drop-zone" id="todo-zone" ondragover="allowDrop(event)" ondrop="drop(event)" style="min-height: 300px; border-radius:12px;"><div class="draggable-task" id="task-1" draggable="true" ondragstart="drag(event)"><span class="badge badge-primary" style="font-size: 0.65rem; margin-bottom:0.5rem; display:inline-block;">MODULE 01</span><strong style="display: block; font-size: 1rem; margin-bottom: 0.5rem;">Watch React Video</strong></div><div class="draggable-task" id="task-2" draggable="true" ondragstart="drag(event)"><span class="badge badge-secondary" style="font-size: 0.65rem; margin-bottom:0.5rem; display:inline-block;">QUIZ</span><strong style="display: block; font-size: 1rem; margin-bottom: 0.5rem;">JS Logic Assessment</strong></div></div></div>
+                <div class="kanban-column"><h4 style="margin-bottom: 1.5rem; color: var(--primary); display: flex; justify-content: space-between;">In Progress <span class="badge badge-primary">1</span></h4><div class="drop-zone" id="progress-zone" ondragover="allowDrop(event)" ondrop="drop(event)" style="min-height: 300px; border-radius:12px;"><div class="draggable-task" id="task-3" draggable="true" ondragstart="drag(event)" style="border-left: 4px solid var(--primary);"><span class="badge badge-primary" style="font-size: 0.65rem; margin-bottom:0.5rem; display:inline-block;">ASSIGNMENT</span><strong style="display: block; font-size: 1rem; margin-bottom: 0.5rem;">Draft Project Proposal</strong></div></div></div>
+                <div class="kanban-column"><h4 style="margin-bottom: 1.5rem; color: var(--success); display: flex; justify-content: space-between;">Completed <span class="badge badge-success">0</span></h4><div class="drop-zone" id="completed-zone" ondragover="allowDrop(event)" ondrop="drop(event)" style="min-height: 300px; border-radius:12px;"></div></div>
+            </div>
+        </div>
+    </main>
+    <footer style="background: #0f172a; color: #94a3b8; padding: 4rem 10% 2rem; margin-top: auto;"><div style="max-width: 1200px; margin: 0 auto; text-align: center;"><a href="index.html" class="logo" style="color: white; -webkit-text-fill-color: white;">EduStream.</a></div></footer>
+    <script src="app.js"></script>
+</body>
+</html>
