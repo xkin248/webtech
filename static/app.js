@@ -128,6 +128,47 @@ window.filterBooks = function() {
 }
 
 // ==========================================
+// FETCH BOOKS FROM DATABASE (BACKEND INTEGRATION)
+// ==========================================
+async function fetchBooks() {
+    try {
+        const apiUrl = 'https://super-doodle-7vwppx5x4xjv2xxjp-3000.app.github.dev/api/books';
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const books = await response.json();
+        const container = document.getElementById('books-container');
+        
+        if (container) {
+            container.innerHTML = ''; 
+            
+            books.forEach((book, index) => {
+                const imgUrl = `https://images.unsplash.com/photo-${1555099962 + index * 1000}-4199c345e5dd?w=500&q=80`;
+                
+                const bookCard = `
+                    <div class="card book-card animate-fade-in delay-${index % 3}" style="display: flex; flex-direction: column;">
+                        <img src="${imgUrl}" alt="${book.title} Cover" class="cover-img" style="height: 180px; object-fit: cover; border-radius: 8px;">
+                        <h3 style="margin: 0.5rem 0; font-size: 1.3rem;">${book.title}</h3>
+                        <p style="color: var(--text-light); margin: 0; font-size: 0.9rem;">Author: ${book.author}</p>
+                        <p style="color: var(--text-light); margin: 0 0 1rem 0; font-size: 0.8rem;">Category: ${book.category} | Stock: ${book.stock}</p>
+                        <p style="color: var(--primary); font-weight: 800; font-size: 1.6rem; margin-bottom: 1.5rem;">RM ${book.price.toFixed(2)}</p>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: auto;" onclick="addToCart(${book.id}, '${book.title}', ${book.price})">Add to Cart</button>
+                    </div>
+                `;
+                container.innerHTML += bookCard;
+            });
+        }
+    } catch (error) {
+        console.error("Failed to load books from database:", error);
+        const container = document.getElementById('books-container');
+        if (container) {
+            container.innerHTML = '<p style="color:var(--danger); text-align:center; width:100%;">Failed to connect to database. Please ensure the backend is running.</p>';
+        }
+    }
+}
+
+// ==========================================
 // UI/UX: DARK MODE & 3D PHYSICS
 // ==========================================
 function toggleDarkMode() {
@@ -151,17 +192,49 @@ function init3DPhysics() {
 }
 
 // ==========================================
-// AUTHENTICATION
+// AUTHENTICATION (DATABASE INTEGRATION)
 // ==========================================
-const validUsers = { 'bcs24020033': { name: 'Justin', password: 'pass123', role: 'student' }, 'lec01': { name: 'Dr. Sarah', password: 'pass123', role: 'lecturer' }, 'admin01': { name: 'Admin', password: 'pass123', role: 'admin' } };
-function handleLogin(e) {
-    e.preventDefault(); const btn = e.target.querySelector('button'); const orig = btn.innerText; btn.innerText = 'Authenticating...'; btn.disabled = true; btn.style.opacity = '0.7';
-    setTimeout(() => {
-        const id = document.getElementById('loginId').value.trim().toLowerCase(); const pw = document.getElementById('password').value; const r = document.getElementById('roleSelect').value; const u = validUsers[id];
-        if (u && u.password === pw && u.role === r) { localStorage.setItem('edustream_session', JSON.stringify({ id, name: u.name, role: u.role })); window.location.href = `${u.role}-dashboard.html`; } 
-        else { showToast("Invalid Credentials.", 'error'); btn.innerText = orig; btn.disabled = false; btn.style.opacity = '1'; }
-    }, 800);
+async function handleLogin(e) {
+    e.preventDefault(); 
+    const btn = e.target.querySelector('button'); 
+    const orig = btn.innerText; 
+    btn.innerText = 'Authenticating...'; 
+    btn.disabled = true; 
+    btn.style.opacity = '0.7';
+
+    // Get input values from the user
+    const id = document.getElementById('loginId').value.trim().toLowerCase(); 
+    const pw = document.getElementById('password').value; 
+    const r = document.getElementById('roleSelect').value; 
+
+    try {
+        const apiUrl = 'https://super-doodle-7vwppx5x4xjv2xxjp-3000.app.github.dev/api/login';
+        
+        // Send login credentials to the backend database
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, password: pw, role: r })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Login successful! Save the database user data into local storage
+            localStorage.setItem('edustream_session', JSON.stringify(result.user)); 
+            window.location.href = `${result.user.role}-dashboard.html`; 
+        } else {
+            // Wrong password or ID
+            showToast(result.message || "Invalid Credentials.", 'error'); 
+            btn.innerText = orig; btn.disabled = false; btn.style.opacity = '1';
+        }
+    } catch (error) {
+        console.error("Login request failed:", error);
+        showToast("Server Connection Failed.", 'error');
+        btn.innerText = orig; btn.disabled = false; btn.style.opacity = '1';
+    }
 }
+
 function handleLogout() { localStorage.removeItem('edustream_session'); window.location.href = 'portal.html'; }
 function checkAuthStatus() {
     const s = localStorage.getItem('edustream_session'); const cur = window.location.pathname.split('/').pop() || 'index.html'; const auth = document.querySelectorAll('.auth-required'); const dLink = document.getElementById('dynamic-dash-link'); const nBtn = document.getElementById('nav-auth-btn');
@@ -213,8 +286,72 @@ function renderCartUI() {
     if (AppState.cart.length === 0) { c.innerHTML = `<div style="text-align:center; padding:2rem 0; color:var(--text-light);">🛒<br>Empty.</div>`; t.innerText = 'RM 0.00'; return; } 
     let tot = 0; c.innerHTML = AppState.cart.map((i, x) => { tot += i.price; return `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--glass-border);"><div><strong style="display:block;">${i.title}</strong><span style="color:var(--primary); font-weight:800;">RM ${i.price.toFixed(2)}</span></div><button onclick="removeFromCart(${x})" style="background:none;border:none;cursor:pointer;">&times;</button></div>`; }).join(''); t.innerText = `RM ${tot.toFixed(2)}`; 
 }
-const API = { checkout: () => { if (!AppState.cart.length) return showToast("Cart empty", 'warning'); const m = document.createElement('div'); m.className = 'modal-overlay'; m.style.display = 'flex'; m.innerHTML = `<div class="card" style="text-align:center;"><h3>Checkout</h3><p>Total: <strong>RM ${AppState.cart.reduce((s,i)=>s+i.price,0).toFixed(2)}</strong></p><button class="btn btn-primary" id="pay-btn" style="width:100%;margin-top:10px;">Pay</button><button class="btn btn-outline" style="width:100%;margin-top:10px;" onclick="this.closest('.modal-overlay').remove()">Cancel</button></div>`; document.body.appendChild(m); setTimeout(() => m.style.opacity = '1', 10); document.getElementById('pay-btn').onclick = function() { this.innerText = "Processing..."; this.disabled = true; setTimeout(() => { m.remove(); AppState.cart = []; saveCart(); updateCartBadge(); renderCartUI(); showToast("Payment Successful!", 'success'); }, 1500); }; } };
 
+// ==========================================
+// CHECKOUT & INVENTORY DB INTEGRATION
+// ==========================================
+const API = { 
+    checkout: () => { 
+        if (!AppState.cart.length) return showToast("Cart empty", 'warning'); 
+        
+        const m = document.createElement('div'); 
+        m.className = 'modal-overlay'; 
+        m.style.display = 'flex'; 
+        m.innerHTML = `
+            <div class="card" style="text-align:center;">
+                <h3>Checkout</h3>
+                <p>Total: <strong style="color:var(--primary);">RM ${AppState.cart.reduce((s,i)=>s+i.price,0).toFixed(2)}</strong></p>
+                <button class="btn btn-primary" id="pay-btn" style="width:100%;margin-top:10px;">Pay Securely</button>
+                <button class="btn btn-outline" style="width:100%;margin-top:10px;" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+            </div>`; 
+        document.body.appendChild(m); 
+        setTimeout(() => m.style.opacity = '1', 10); 
+        
+        document.getElementById('pay-btn').onclick = async function() { 
+            this.innerText = "Processing Transaction..."; 
+            this.disabled = true; 
+            
+            try {
+                // Connecting to your Codespaces checkout API
+                const apiUrl = 'https://super-doodle-7vwppx5x4xjv2xxjp-3000.app.github.dev/api/checkout';
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cart: AppState.cart }) 
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    m.remove(); 
+                    AppState.cart = []; // Clear local cart
+                    saveCart(); 
+                    updateCartBadge(); 
+                    renderCartUI(); 
+                    
+                    showToast("Payment Successful! Inventory updated.", 'success'); 
+                    
+                    // Refresh books from the database so the new inventory is visible
+                    fetchBooks(); 
+                } else {
+                    showToast("Checkout failed.", 'error');
+                    this.innerText = "Pay Securely"; 
+                    this.disabled = false;
+                }
+            } catch (error) {
+                console.error("Checkout error:", error);
+                showToast("Server Connection Failed.", 'error');
+                this.innerText = "Pay Securely"; 
+                this.disabled = false;
+            }
+        }; 
+    } 
+};
+
+// ==========================================
+// QUIZ & FORUM LOGIC
+// ==========================================
 let cQ = 0, sc = 0, sO = null; const qD = [{q:"What is HTML used for?", opts:["Styling","Structure","Logic","DB"], a:1}, {q:"CSS changes background?", opts:["color","bgcolor","background-color","paint"], a:2}];
 function openQuiz() { cQ=0; sc=0; const m = document.getElementById('quiz-modal'); if(m) { m.style.display='flex'; setTimeout(()=>m.style.opacity='1',10); ldQ(); } }
 function closeQuiz() { const m = document.getElementById('quiz-modal'); if(m) { m.style.opacity='0'; setTimeout(()=>m.style.display='none',300); } }
@@ -239,5 +376,9 @@ function banUser(id) { if(confirm(`Ban user ${id}?`)) { AppState.users = AppStat
 document.addEventListener('DOMContentLoaded', () => {
     loadTheme(); loadCart(); updateCartBadge(); renderCartUI(); checkAuthStatus(); loadKanbanState(); init3DPhysics();
     initMobileMenu(); initChatbot();
+    
+    // Fetch books from the database when the page loads
+    fetchBooks();
+
     const loginForm = document.getElementById('loginForm'); if (loginForm) loginForm.onsubmit = handleLogin;
 });

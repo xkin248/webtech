@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bookstore | EduStream</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
     <nav>
@@ -27,26 +27,11 @@
                 <div style="margin-bottom: 2rem;" class="animate-fade-in">
                     <input type="text" id="search-bar" onkeyup="filterBooks()" placeholder="🔍 Search for books, authors, or topics..." style="max-width: 500px; box-shadow: var(--glass-shadow);">
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem;">
-                    <div class="card book-card animate-fade-in" style="display: flex; flex-direction: column;">
-                        <img src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=500&q=80" alt="React Book" class="cover-img">
-                        <h3 style="margin: 0.5rem 0; font-size: 1.3rem;">Advanced React Patterns</h3>
-                        <p style="color: var(--primary); font-weight: 800; font-size: 1.6rem; margin-bottom: 1.5rem;">RM 65.00</p>
-                        <button class="btn btn-primary" style="width: 100%; margin-top: auto;" onclick="addToCart(1, 'Advanced React Patterns', 65.00)">Add to Cart</button>
-                    </div>
-                    <div class="card book-card animate-fade-in delay-1" style="display: flex; flex-direction: column;">
-                        <img src="https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=500&q=80" alt="JS Book" class="cover-img">
-                        <h3 style="margin: 0.5rem 0; font-size: 1.3rem;">Mastering JavaScript ES6</h3>
-                        <p style="color: var(--primary); font-weight: 800; font-size: 1.6rem; margin-bottom: 1.5rem;">RM 85.00</p>
-                        <button class="btn btn-primary" style="width: 100%; margin-top: auto;" onclick="addToCart(2, 'Mastering JavaScript ES6', 85.00)">Add to Cart</button>
-                    </div>
-                    <div class="card book-card animate-fade-in delay-2" style="display: flex; flex-direction: column;">
-                        <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&q=80" alt="UX Book" class="cover-img">
-                        <h3 style="margin: 0.5rem 0; font-size: 1.3rem;">UI/UX Design Principles</h3>
-                        <p style="color: var(--primary); font-weight: 800; font-size: 1.6rem; margin-bottom: 1.5rem;">RM 110.00</p>
-                        <button class="btn btn-primary" style="width: 100%; margin-top: auto;" onclick="addToCart(3, 'UI/UX Design Principles', 110.00)">Add to Cart</button>
-                    </div>
+                
+                <div id="books-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem;">
+                    <p style="color: var(--text-light);">Loading books from database...</p>
                 </div>
+
             </div>
             <div style="flex: 1; min-width: 320px; position: sticky; top: 120px;">
                 <div class="card animate-fade-in" style="border: 2px dashed var(--primary);">
@@ -61,6 +46,6 @@
         </section>
     </main>
     <footer style="background: #0f172a; color: #94a3b8; padding: 4rem 10% 2rem; margin-top: auto;"><div style="max-width: 1200px; margin: 0 auto; text-align: center;"><a href="index.html" class="logo" style="color: white; -webkit-text-fill-color: white;">EduStream.</a></div></footer>
-    <script src="app.js"></script>
+    <script src="../static/app.js"></script>
 </body>
 </html>
