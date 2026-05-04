@@ -37,6 +37,21 @@ class Book(db.Model):
     category = db.Column(db.String(100))
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=10)
+    
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+    role = db.Column(db.String(50), default='student')
+    saved_progress = db.Column(db.String(500), default='') # 用于保存已完成课程的ID
+
+# 新增：购买历史记录模型
+class PurchaseHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), nullable=False)
+    book_title = db.Column(db.String(200), nullable=False)
+    amount_paid = db.Column(db.Float, nullable=False)
+    purchase_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Initialize Database
 with app.app_context():
@@ -107,20 +122,29 @@ def handle_forum():
 # --- Module 5: Bookstore & Checkout ---
 @app.route('/api/books', methods=['GET'])
 def get_books():
+    search_query = request.args.get('search', '').lower()
     books = Book.query.all()
-    return jsonify([{"id": b.id, "title": b.title, "category": b.category, "price": b.price, "stock": b.stock} for b in books])
+    
+    book_list = []
+    for b in books:
+        if search_query in b.title.lower() or search_query in b.category.lower() or not search_query:
+            book_list.append({"id": b.id, "title": b.title, "category": b.category, "price": b.price, "stock": b.stock})
+    return jsonify(book_list)
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
     data = request.get_json()
-    cart_items = data.get('cart', []) # Expects a list of book IDs
+    cart_items = data.get('cart', []) 
+    current_user = data.get('username', 'Guest')
     
     total_cost = 0
     for book_id in cart_items:
         book = Book.query.get(book_id)
         if book and book.stock > 0:
-            book.stock -= 1 # Deduct inventory
+            book.stock -= 1 
             total_cost += book.price
+            history = PurchaseHistory(username=current_user, book_title=book.title, amount_paid=book.price)
+            db.session.add(history)
         else:
             return jsonify({"error": f"Book ID {book_id} is out of stock"}), 400
             
