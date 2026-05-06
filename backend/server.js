@@ -128,11 +128,28 @@ async function startServer() {
         });
 
         // ==========================================
-        // 3. 路由兜底 (修复 PathToRegexp 错误)
+        // 3. 页面路由 (多页面应用的完美解法)
         // ==========================================
         
+        // 预设 templates 文件夹的绝对路径
+        const templatesPath = path.join(__dirname, '../templates ');
+
+        // 为每一个页面设置专属的访问通道
+        app.get('/', (req, res) => res.sendFile(path.join(templatesPath, 'index.html')));
+        app.get('/index.html', (req, res) => res.sendFile(path.join(templatesPath, 'index.html')));
+        app.get('/courses.html', (req, res) => res.sendFile(path.join(templatesPath, 'courses.html')));
+        app.get('/bookstore.html', (req, res) => res.sendFile(path.join(templatesPath, 'bookstore.html')));
+        app.get('/forum.html', (req, res) => res.sendFile(path.join(templatesPath, 'forum.html')));
+        app.get('/portal.html', (req, res) => res.sendFile(path.join(templatesPath, 'portal.html')));
+        
+        // Dashboard 页面通道
+        app.get('/student-dashboard.html', (req, res) => res.sendFile(path.join(templatesPath, 'student-dashboard.html')));
+        app.get('/lecturer-dashboard.html', (req, res) => res.sendFile(path.join(templatesPath, 'lecturer-dashboard.html')));
+        app.get('/admin-dashboard.html', (req, res) => res.sendFile(path.join(templatesPath, 'admin-dashboard.html')));
+
+        // 真正的 404 兜底：如果用户乱输网址，提示找不到页面，而不是盲目返回主页
         app.use((req, res) => {
-            res.sendFile(path.join(__dirname, '../templates/index.html'));
+            res.status(404).send('<h1 style="text-align:center; margin-top:50px;">404 - Page Not Found</h1><div style="text-align:center;"><a href="/">Go back home</a></div>');
         });
 
         const PORT = process.env.PORT || 3000; 
