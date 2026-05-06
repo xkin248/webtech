@@ -1,4 +1,11 @@
 // ==========================================
+// 💡 部署核心：动态 API 基础路径
+// ==========================================
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:3000' 
+    : ''; // 部署后，前端和后端同源，直接使用相对路径即可
+
+// ==========================================
 // EDUSTREAM MASTER STATE & UI
 // ==========================================
 const AppState = { 
@@ -128,11 +135,11 @@ window.filterBooks = function() {
 }
 
 // ==========================================
-// FETCH BOOKS FROM DATABASE (BACKEND INTEGRATION)
+// FETCH BOOKS FROM DATABASE
 // ==========================================
 async function fetchBooks() {
     try {
-        const apiUrl = 'https://super-doodle-7vwppx5x4xjv2xxjp-3000.app.github.dev/api/books';
+        const apiUrl = `${API_BASE_URL}/api/books`; // 💡 动态路径
         
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error('Network response was not ok');
@@ -163,7 +170,7 @@ async function fetchBooks() {
         console.error("Failed to load books from database:", error);
         const container = document.getElementById('books-container');
         if (container) {
-            container.innerHTML = '<p style="color:var(--danger); text-align:center; width:100%;">Failed to connect to database. Please ensure the backend is running.</p>';
+            container.innerHTML = '<p style="color:var(--danger); text-align:center; width:100%;">Failed to connect to database.</p>';
         }
     }
 }
@@ -192,25 +199,22 @@ function init3DPhysics() {
 }
 
 // ==========================================
-// AUTHENTICATION (DATABASE INTEGRATION)
+// AUTHENTICATION (LOGIN & REGISTER)
 // ==========================================
+
 async function handleLogin(e) {
     e.preventDefault(); 
     const btn = e.target.querySelector('button'); 
     const orig = btn.innerText; 
     btn.innerText = 'Authenticating...'; 
     btn.disabled = true; 
-    btn.style.opacity = '0.7';
 
-    // Get input values from the user
     const id = document.getElementById('loginId').value.trim().toLowerCase(); 
-    const pw = document.getElementById('password').value; 
-    const r = document.getElementById('roleSelect').value; 
+    const pw = document.getElementById('loginPassword').value; 
+    const r = document.getElementById('loginRole').value; 
 
     try {
-        const apiUrl = 'https://super-doodle-7vwppx5x4xjv2xxjp-3000.app.github.dev/api/login';
-        
-        // Send login credentials to the backend database
+        const apiUrl = `${API_BASE_URL}/api/login`; // 💡 动态路径
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -220,18 +224,56 @@ async function handleLogin(e) {
         const result = await response.json();
 
         if (result.success) {
-            // Login successful! Save the database user data into local storage
+            showToast(`Welcome back, ${result.user.name}!`, 'success');
             localStorage.setItem('edustream_session', JSON.stringify(result.user)); 
-            window.location.href = `${result.user.role}-dashboard.html`; 
+            setTimeout(() => {
+                window.location.href = `${result.user.role}-dashboard.html`; 
+            }, 1000);
         } else {
-            // Wrong password or ID
             showToast(result.message || "Invalid Credentials.", 'error'); 
-            btn.innerText = orig; btn.disabled = false; btn.style.opacity = '1';
+            btn.innerText = orig; btn.disabled = false;
         }
     } catch (error) {
         console.error("Login request failed:", error);
         showToast("Server Connection Failed.", 'error');
-        btn.innerText = orig; btn.disabled = false; btn.style.opacity = '1';
+        btn.innerText = orig; btn.disabled = false;
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const orig = btn.innerText;
+    btn.innerText = 'Creating Account...';
+    btn.disabled = true;
+
+    const role = document.getElementById('regRole').value;
+    const name = document.getElementById('regName').value.trim();
+    const id = document.getElementById('regId').value.trim().toLowerCase();
+    const pw = document.getElementById('regPassword').value;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/register`, { // 💡 动态路径
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, name, password: pw, role })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast("Account Created! Please sign in.", "success");
+            if(typeof toggleAuthMode === 'function') toggleAuthMode(); 
+            document.getElementById('registerForm').reset();
+            document.getElementById('loginId').value = id;
+        } else {
+            showToast(result.message || "Registration failed.", "error");
+        }
+    } catch (error) {
+        showToast("Server Connection Failed.", "error");
+    } finally {
+        btn.innerText = orig;
+        btn.disabled = false;
     }
 }
 
@@ -268,7 +310,7 @@ function saveKanbanState() { if (!AppState.user) return; const s = { t: document
 function loadKanbanState() { if (!AppState.user) return; const s = localStorage.getItem(`kanban_${AppState.user.id}`); if (s) { const st = JSON.parse(s); const t = document.getElementById('todo-zone'); const p = document.getElementById('progress-zone'); const c = document.getElementById('completed-zone'); if(t&&st.t) t.innerHTML=st.t; if(p&&st.p) p.innerHTML=st.p; if(c&&st.c) c.innerHTML=st.c; updateKanbanCounters(); } }
 
 // ==========================================
-// COURSE NOTEPAD, SHOPPING CART, QUIZ
+// COURSE NOTEPAD, SHOPPING CART
 // ==========================================
 let curMod = '';
 function openNotepad(id) { if (!AppState.user) return showToast("Sign in required.", 'warning'); curMod = id; const m = document.getElementById('notepad-modal'); if(m) { m.querySelector('textarea').value = localStorage.getItem(`notes_${AppState.user.id}_${id}`) || ''; m.style.display = 'flex'; setTimeout(() => m.style.opacity = '1', 10); } }
@@ -312,8 +354,7 @@ const API = {
             this.disabled = true; 
             
             try {
-                // Connecting to your Codespaces checkout API
-                const apiUrl = 'https://super-doodle-7vwppx5x4xjv2xxjp-3000.app.github.dev/api/checkout';
+                const apiUrl = `${API_BASE_URL}/api/checkout`; // 💡 动态路径
                 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -325,14 +366,11 @@ const API = {
                 
                 if (result.success) {
                     m.remove(); 
-                    AppState.cart = []; // Clear local cart
+                    AppState.cart = []; 
                     saveCart(); 
                     updateCartBadge(); 
                     renderCartUI(); 
-                    
                     showToast("Payment Successful! Inventory updated.", 'success'); 
-                    
-                    // Refresh books from the database so the new inventory is visible
                     fetchBooks(); 
                 } else {
                     showToast("Checkout failed.", 'error');
@@ -350,17 +388,13 @@ const API = {
 };
 
 // ==========================================
-// QUIZ & FORUM LOGIC
+// QUIZ LOGIC
 // ==========================================
 let cQ = 0, sc = 0, sO = null; const qD = [{q:"What is HTML used for?", opts:["Styling","Structure","Logic","DB"], a:1}, {q:"CSS changes background?", opts:["color","bgcolor","background-color","paint"], a:2}];
 function openQuiz() { cQ=0; sc=0; const m = document.getElementById('quiz-modal'); if(m) { m.style.display='flex'; setTimeout(()=>m.style.opacity='1',10); ldQ(); } }
 function closeQuiz() { const m = document.getElementById('quiz-modal'); if(m) { m.style.opacity='0'; setTimeout(()=>m.style.display='none',300); } }
 function ldQ() { sO = null; const q = qD[cQ]; document.getElementById('quiz-progress').innerText = `${cQ+1}/${qD.length}`; document.getElementById('question-text').innerText = q.q; const c = document.getElementById('options-container'); c.innerHTML = ''; q.opts.forEach((o,i) => { const b = document.createElement('button'); b.className = 'btn btn-outline'; b.style.width='100%'; b.style.marginBottom='1rem'; b.innerText = o; b.onclick = () => { sO=i; c.querySelectorAll('button').forEach(btn=>{btn.style.background='transparent'; btn.style.color='var(--text-dark)';}); b.style.background='var(--primary)'; b.style.color='#fff'; }; c.appendChild(b); }); document.getElementById('next-btn').innerText = cQ===qD.length-1?"Finish":"Next"; }
 function nxtQ() { if (sO === null) return; if (sO === qD[cQ].a) sc++; cQ++; if (cQ < qD.length) ldQ(); else { closeQuiz(); showToast(`Quiz Complete! Scored ${Math.round((sc/qD.length)*100)}%`, 'success'); addXP(100); } }
-
-function openTopicModal() { const m = document.getElementById('topic-modal'); if(m) { m.style.display='flex'; setTimeout(()=>m.style.opacity='1',10); } }
-function closeTopicModal() { const m = document.getElementById('topic-modal'); if(m) { m.style.opacity='0'; setTimeout(()=>{m.style.display='none'; document.getElementById('topic-title').value=''; document.getElementById('topic-body').value='';},300); } }
-function submitTopic() { const t = document.getElementById('topic-title').value.trim(); const b = document.getElementById('topic-body').value.trim(); if (!t) return; closeTopicModal(); showToast("Posted!", 'success'); const c = document.getElementById('forum-posts-container'); if (c) { const d = document.createElement('div'); d.className = 'card'; d.style.marginBottom = '1.5rem'; d.innerHTML = `<div style="display:flex; justify-content:space-between;"><h3>${t}</h3><button class="btn btn-danger" onclick="this.closest('.card').remove()">Del</button></div><div style="color:var(--text-light); margin-top:0.5rem;">By ${AppState.user.name}</div><hr style="margin:1rem 0;"><p>${b}</p>`; c.insertBefore(d, c.firstChild); } }
 
 // Admin/Lecturer Renders
 function renderAnnouncements() { const c = document.getElementById('announcements-feed'); if (c) c.innerHTML = AppState.announcements.map(a => `<div class="card" style="padding:1.5rem; margin-bottom:1rem; border-left:4px solid var(--secondary);"><p>${a.text}</p><span style="font-size:0.75rem; color:var(--text-light);">Posted ${timeAgo(a.timestamp)}</span></div>`).join(''); }
@@ -371,14 +405,123 @@ function renderUsers() { const c = document.getElementById('users-feed'); if (c)
 function banUser(id) { if(confirm(`Ban user ${id}?`)) { AppState.users = AppState.users.filter(u => u.id !== id); renderUsers(); AppState.logs.unshift(`[${new Date().toLocaleTimeString()}] ALERT: Banned '${id}'`); renderLogs(); showToast(`Banned.`, 'success'); } }
 
 // ==========================================
+// FORUM / COMMUNITY LOGIC
+// ==========================================
+async function fetchForumPosts() {
+    const container = document.getElementById('forum-posts-container');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/posts`); // 💡 动态路径
+        const result = await response.json();
+
+        if (result.success) {
+            renderForumPosts(result.data);
+        }
+    } catch (error) {
+        console.error("Failed to load posts:", error);
+        container.innerHTML = '<p style="color:var(--danger);">Error connecting to forum database.</p>';
+    }
+}
+
+function renderForumPosts(posts) {
+    const container = document.getElementById('forum-posts-container');
+    container.innerHTML = '';
+
+    if (posts.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-light);">No topics yet. Be the first to start a conversation!</p>';
+        return;
+    }
+
+    posts.forEach(post => {
+        const isModerator = AppState.user && (AppState.user.role === 'admin' || AppState.user.role === 'lecturer');
+        const postCard = document.createElement('div');
+        postCard.className = 'card animate-fade-in';
+        postCard.style.marginBottom = '1.5rem';
+        const deleteBtn = isModerator ? `<button class="btn btn-danger" onclick="deletePost(${post.id})">Delete</button>` : '';
+
+        postCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.4rem; color: var(--primary);">${post.title}</h3>
+                    <small style="color: var(--text-light);">By ${post.authorName} (${post.authorRole}) • ${new Date(post.created_at).toLocaleDateString()}</small>
+                </div>
+                ${deleteBtn}
+            </div>
+            <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--glass-border);">
+            <p style="line-height: 1.6;">${post.body}</p>
+        `;
+        container.appendChild(postCard);
+    });
+}
+
+window.openTopicModal = function() {
+    if (!AppState.user) return showToast("Please Sign In to post.", "warning");
+    const modal = document.getElementById('topic-modal');
+    modal.style.display = 'flex'; setTimeout(() => modal.style.opacity = '1', 10);
+};
+
+window.closeTopicModal = function() {
+    const modal = document.getElementById('topic-modal');
+    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
+};
+
+window.submitTopic = async function() {
+    const title = document.getElementById('topic-title').value.trim();
+    const body = document.getElementById('topic-body').value.trim();
+    if (!title || !body) return showToast("Please fill in all fields.", "warning");
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/posts`, { // 💡 动态路径
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, body: body, authorName: AppState.user.name, authorRole: AppState.user.role })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            showToast("Topic Posted!", "success");
+            closeTopicModal();
+            fetchForumPosts(); 
+            document.getElementById('topic-title').value = '';
+            document.getElementById('topic-body').value = '';
+        }
+    } catch (error) {
+        showToast("Failed to post topic.", "error");
+    }
+};
+
+window.deletePost = async function(postId) {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, { method: 'DELETE' }); // 💡 动态路径
+        const result = await response.json();
+        if (result.success) {
+            showToast("Post deleted.", "success");
+            fetchForumPosts(); 
+        }
+    } catch (error) {
+        showToast("Delete failed.", "error");
+    }
+};
+
+// ==========================================
 // INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     loadTheme(); loadCart(); updateCartBadge(); renderCartUI(); checkAuthStatus(); loadKanbanState(); init3DPhysics();
     initMobileMenu(); initChatbot();
     
-    // Fetch books from the database when the page loads
     fetchBooks();
 
-    const loginForm = document.getElementById('loginForm'); if (loginForm) loginForm.onsubmit = handleLogin;
+    if (window.location.pathname.includes('forum.html')) {
+        fetchForumPosts();
+    }
+
+    const loginForm = document.getElementById('loginForm'); 
+    if (loginForm) loginForm.onsubmit = handleLogin;
+
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) registerForm.onsubmit = handleRegister;
 });

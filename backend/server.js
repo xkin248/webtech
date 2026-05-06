@@ -2,26 +2,30 @@ const express = require('express');
 const cors = require('cors');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
+const path = require('path');
 
 const app = express();
-app.use(express.json()); // Allow server to parse JSON data
-app.use(cors());         // Enable CORS for cross-origin requests
+app.use(express.json()); 
+app.use(cors()); 
 
-let db; // Store database connection
+// ==========================================
+// 1. 静态文件托管 (托管前端 HTML/CSS/JS)
+// ==========================================
+app.use('/static', express.static(path.join(__dirname, '../static')));
+app.use(express.static(path.join(__dirname, '../templates')));
 
-// Initialize database and start the server
+let db; 
+
 async function startServer() {
     try {
-        // 1. Connect and create the SQLite database file
+        // 确保数据库文件路径在不同环境下都能正确定位
         db = await open({
-            filename: './edustream.sqlite', 
+            filename: path.join(__dirname, './edustream.sqlite'), 
             driver: sqlite3.Database
         });
-        console.log('✅ SQLite database connected! File created/opened: edustream.sqlite');
+        console.log('✅ SQLite database connected!');
 
-        // ==========================================
-        // 2. Create database tables
-        // ==========================================
+        // --- 数据库表初始化 ---
         await db.exec(`
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
@@ -30,7 +34,6 @@ async function startServer() {
                 role TEXT NOT NULL,
                 xp INTEGER DEFAULT 0
             );
-
             CREATE TABLE IF NOT EXISTS books (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
@@ -39,17 +42,19 @@ async function startServer() {
                 stock INTEGER DEFAULT 10,
                 category TEXT
             );
+            CREATE TABLE IF NOT EXISTS posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                authorName TEXT NOT NULL,
+                authorRole TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
         `);
-        console.log('✅ Tables "users" and "books" checked/created successfully!');
 
-        // ==========================================
-        // 3. Insert initial test data (if tables are empty)
-        // ==========================================
-        
-        // Check if the users table is empty
+        // --- 自动填充初始数据 (如果表是空的) ---
         const userCount = await db.get('SELECT COUNT(*) as count FROM users');
         if (userCount.count === 0) {
-            console.log('🔄 Inserting initial user data...');
             const insertUser = await db.prepare('INSERT INTO users (id, name, password, role) VALUES (?, ?, ?, ?)');
             await insertUser.run('bcs24020033', 'Justin', 'pass123', 'student');
             await insertUser.run('lec01', 'Dr. Sarah', 'pass123', 'lecturer');
@@ -57,93 +62,85 @@ async function startServer() {
             await insertUser.finalize();
         }
 
-        // Check if the books table is empty
         const bookCount = await db.get('SELECT COUNT(*) as count FROM books');
         if (bookCount.count === 0) {
-            console.log('🔄 Inserting initial book data...');
             const insertBook = await db.prepare('INSERT INTO books (title, author, price, category) VALUES (?, ?, ?, ?)');
-            // Note: Prices represent Ringgit Malaysia (RM)
             await insertBook.run('Web Development 101', 'John Doe', 85.50, 'Computer Science');
             await insertBook.run('Advanced React Patterns', 'Jane Smith', 120.00, 'Programming');
             await insertBook.run('Database Design Fundamentals', 'Alan Turing', 95.00, 'Database');
             await insertBook.finalize();
         }
 
+        const postCount = await db.get('SELECT COUNT(*) as count FROM posts');
+        if (postCount.count === 0) {
+            const insertPost = await db.prepare('INSERT INTO posts (title, body, authorName, authorRole) VALUES (?, ?, ?, ?)');
+            await insertPost.run('Welcome to the EduStream Community!', 'Feel free to ask questions here.', 'Admin', 'admin');
+            await insertPost.run('Need help with Web Tech', 'How to deploy Node.js?', 'Justin', 'student');
+            await insertPost.finalize();
+        }
+
         // ==========================================
-        // 4. API Endpoints
+        // 2. API 路由接口
         // ==========================================
         
-        // Basic health check endpoint
-        app.get('/', (req, res) => {
-            res.send('EduStream backend is running!');
-        });
-
-        // API endpoint to fetch all books
         app.get('/api/books', async (req, res) => {
-            try {
-                const books = await db.all('SELECT * FROM books');
-                res.json(books);
-            } catch (error) {
-                res.status(500).json({ error: error.message });
-            }
+            try { res.json(await db.all('SELECT * FROM books')); } 
+            catch (error) { res.status(500).json({ error: error.message }); }
         });
 
-        // ==========================================
-        // USER LOGIN API (POST)
-        // ==========================================
         app.post('/api/login', async (req, res) => {
-            try {
-                // Extract login details sent from the frontend
-                const { id, password, role } = req.body;
-                
-                // Query the database to find a matching user
-                const query = 'SELECT id, name, role, xp FROM users WHERE id = ? AND password = ? AND role = ?';
-                const user = await db.get(query, [id, password, role]);
-                
-                if (user) {
-                    // Match found! Send back success and user details (excluding password)
-                    res.json({ success: true, user: user });
-                } else {
-                    // No match found in the database
-                    res.status(401).json({ success: false, message: 'Invalid ID, Password, or Role' });
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                res.status(500).json({ success: false, message: 'Internal server error' });
-            }
+            const { id, password, role } = req.body;
+            const user = await db.get('SELECT id, name, role, xp FROM users WHERE id = ? AND password = ? AND role = ?', [id, password, role]);
+            if (user) res.json({ success: true, user: user });
+            else res.status(401).json({ success: false, message: 'Invalid ID, Password, or Role' });
         });
 
-        // ==========================================
-        // CHECKOUT API (POST) - Deduct Inventory
-        // ==========================================
+        app.post('/api/register', async (req, res) => {
+            const { id, name, password, role } = req.body;
+            const existingUser = await db.get('SELECT id FROM users WHERE id = ?', [id]);
+            if (existingUser) return res.status(409).json({ success: false, message: 'ID taken.' });
+            await db.run('INSERT INTO users (id, name, password, role) VALUES (?, ?, ?, ?)', [id, name, password, role]);
+            res.json({ success: true });
+        });
+
+        app.get('/api/posts', async (req, res) => {
+            const posts = await db.all('SELECT * FROM posts ORDER BY id DESC');
+            res.json({ success: true, data: posts });
+        });
+
+        app.post('/api/posts', async (req, res) => {
+            const { title, body, authorName, authorRole } = req.body;
+            await db.run('INSERT INTO posts (title, body, authorName, authorRole) VALUES (?, ?, ?, ?)', [title, body, authorName, authorRole]);
+            res.json({ success: true });
+        });
+
+        app.delete('/api/posts/:id', async (req, res) => {
+            await db.run('DELETE FROM posts WHERE id = ?', [req.params.id]);
+            res.json({ success: true });
+        });
+
         app.post('/api/checkout', async (req, res) => {
-            try {
-                // Receive the cart data from frontend
-                const { cart } = req.body; 
-
-                if (!cart || cart.length === 0) {
-                    return res.status(400).json({ success: false, message: 'Cart is empty' });
-                }
-
-                // Loop through each item in the cart and deduct 1 from its stock in the database
-                for (let item of cart) {
-                    await db.run('UPDATE books SET stock = stock - 1 WHERE id = ? AND stock > 0', [item.id]);
-                }
-
-                res.json({ success: true, message: 'Checkout successful and inventory updated!' });
-            } catch (error) {
-                console.error('Checkout error:', error);
-                res.status(500).json({ success: false, message: 'Internal server error' });
+            const { cart } = req.body;
+            for (let item of cart) {
+                await db.run('UPDATE books SET stock = stock - 1 WHERE id = ? AND stock > 0', [item.id]);
             }
+            res.json({ success: true });
         });
+
+        // ==========================================
+        // 3. 路由兜底 (修复 PathToRegexp 错误)
+        // ==========================================
         
-        // ==========================================
-        // 5. Listen on port 3000
-        // ==========================================
-        app.listen(3000, () => {
-            console.log('🚀 Server running on port 3000');
-            console.log('👉 Test the books API: http://localhost:3000/api/books');
+        app.use((req, res) => {
+            res.sendFile(path.join(__dirname, '../templates/index.html'));
         });
+
+        const PORT = process.env.PORT || 3000; 
+        app.listen(PORT, () => {
+            console.log(`🚀 EduStream Server is Live!`);
+            console.log(`🔗 Local link: http://localhost:${PORT}`);
+        });
+
     } catch (error) {
         console.error('❌ Failed to start server:', error);
     }
